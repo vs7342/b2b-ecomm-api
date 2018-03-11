@@ -1,0 +1,8 @@
+{
+    "MySQL":{
+        "host":"dev-host",
+        "username":"dev-username",
+        "password":"dev-password"
+    },
+    "JwtSecret": "dev-jwt-secret"
+}

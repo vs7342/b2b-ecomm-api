@@ -1,0 +1,8 @@
+{
+    "MySQL":{
+        "host":"prod-host",
+        "username":"prod-username",
+        "password":"prod-password"
+    },
+    "JwtSecret": "prod-jwt-secret"
+}
