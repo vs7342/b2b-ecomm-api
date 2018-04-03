@@ -4,7 +4,7 @@
 
 module.exports = function(){
     var Sequelize = require('sequelize');
-    var helper = require('../helper');
+    var helper = require('../../helper');
     var agency_seq = helper.getAgencySeq('control');
 
     this.dbSeq = agency_seq.define('Retailer', {
