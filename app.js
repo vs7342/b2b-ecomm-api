@@ -6,6 +6,9 @@ var body_parser = require('body-parser');
 //Including utility methods
 var helper = require('./helper');
 
+//Importing Services
+var service_control = require("./services/ControlService");
+
 //Express app
 var app = express();
 var server = http.createServer(app);
@@ -51,3 +54,11 @@ app.post('/test', function(req, res){
     res.status(200).send(helper.getResponseObject(true, {'test_param': test_param}));
 })
 
+
+//Control DB Endpoints
+//Retailer
+app.post('/control/retailer', service_control.createRetailer);
+app.put('/control/retailer', service_control.editRetailer);
+app.get('/control/retailer', service_control.getRetailer);
+app.get('/control/retailer/:retailer_id', service_control.getRetailer);
+app.delete('/control/retailer', service_control.deleteRetailer);
