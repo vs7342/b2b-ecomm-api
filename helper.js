@@ -5,40 +5,54 @@
 //Node libraries
 var Sequelize = require('sequelize');
 
- //Used for server configs ('dev' or 'prod')
-const ENVIRONMENT = 'dev';
+//Initialize ENVIRONMENT constant based on 'CURRENT_ENV' environment variable
+//Possible values are 'dev' and 'prod'
+var current_env = process.env.CURRENT_ENV;
+var ENVIRONMENT;
+if(current_env != undefined){
+    ENVIRONMENT = current_env;
+}else{
+    ENVIRONMENT = 'dev';
+}
 module.exports.ENVIRONMENT = ENVIRONMENT;
 
 /**
  * @author: Vidit Singhal
+ * @param {*} httpResponse - HTTP Response object
+ * @param {*} statusCode - HTTP Response code
  * @param {*} isSuccessful - True/False
  * @param {*} message - String (Usually a message) / JSON object (data to be returned in response)
  * @description:
- * Returns a JSON object based on the parameter <message>
+ * Creates a response object (JSON) based on the parameter <message> and sends the response
  * 
- * If <message> is a string, return body will look like - 
+ * If <message> is a string, response body will look like - 
  *       {
  *           "success": true/false,
  *           "message": message
  *       }
- * If <message> is an object (data which needs to be returned), return body will look like - 
+ * If <message> is an object (data which needs to be returned), response body will look like - 
  *       {
  *           "success": true/false,
  *           "data": message
  *       }
  */
-module.exports.getResponseObject = function(isSuccessful, message){
+module.exports.sendResponse = function(httpResponse, statusCode, isSuccessful, message){
+    //Construct response object based on message parameter
+    var responseObj;
     if(typeof message == "string"){
-        return {
+        responseObj = {
             "success": isSuccessful,
             "message": message
         };
     }else{
-        return {
+        responseObj = {
             "success": isSuccessful,
             "data": message
         };
     }
+
+    //Send response
+    httpResponse.status(statusCode).send(responseObj);
 };
 
 /**
