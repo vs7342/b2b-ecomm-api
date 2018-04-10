@@ -6,6 +6,8 @@
 var generator = require('generate-password');
 var importer = require('node-mysql-importer');
 var Sequelize = require('sequelize');
+var crypto = require('crypto');
+var jwt = require('jsonwebtoken');
 
 //Helper functions
 var helper = require("../helper");
@@ -18,6 +20,12 @@ var Retailer = require("../models/control/Retailer");
 var ControlSeq = helper.getAgencySeq('control');
 var control_user = new ControlUser().dbSeq;
 var retailer = new Retailer().dbSeq;
+
+//Config stuff
+var config_file_name = '../configs/' + helper.ENVIRONMENT + '.json';
+var mysql_config = require(config_file_name).MySQL;
+var control_secret_key = require(config_file_name).ControlSecret;
+var jwt_secret_key = require(config_file_name).JwtSecret;
 
 exports.createRetailer = function(req, res){
     
@@ -58,8 +66,6 @@ exports.createRetailer = function(req, res){
                 //Now create tables inside the database using the template file
 
                 //Initialize sql importer with db connection params
-                var config_file_name = '../configs/' + helper.ENVIRONMENT + '.json';
-                var mysql_config = require(config_file_name).MySQL;
                 importer.config({
                     'host': mysql_config['host'],
                     'user': mysql_config['username'],
@@ -213,6 +219,217 @@ exports.deleteRetailer = function(req, res){
             console.error(err);
             helper.sendResponse(res, 500, false, "Error deleting retailer. Code 1.");
         });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.createControlUser = function(req, res){
+
+    //Extract body params
+    var Username = req.body.Username;
+    var Password = req.body.Password;
+    var First_Name = req.body.First_Name;
+    var Last_Name = req.body.Last_Name;
+
+    //Check if all params are provided
+    if(Username && Password && First_Name && Last_Name){
+
+        //Create Hashed password to store in DB
+        var hashed_password = crypto.createHmac('sha256', control_secret_key)
+                                    .update(Password)
+                                    .digest('hex');
+
+        //Create user entry in db
+        control_user.create({
+            Username: Username,
+            Password: hashed_password,
+            First_Name: First_Name,
+            Last_Name: Last_Name,
+            Is_Active: true
+        }).then(created_user=>{
+            helper.sendResponse(res, 200, true, {user_id: created_user.id});
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error creating control user. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.editControlUser = function(req, res){
+
+    //Extract body params
+    var User_id = req.body.User_id;
+    var Username = req.body.Username;
+    var Password = req.body.Password;
+    var First_Name = req.body.First_Name;
+    var Last_Name = req.body.Last_Name;
+    var Is_Active = req.body.Is_Active;
+
+    //Check if all params are provided
+    if(User_id && Username && Password && First_Name && Last_Name && Is_Active != undefined){
+
+        //Create Hashed password to store in DB
+        var hashed_password = crypto.createHmac('sha256', control_secret_key)
+                                    .update(Password)
+                                    .digest('hex');
+
+        //Create user entry in db
+        control_user.update({
+            Username: Username,
+            Password: hashed_password,
+            First_Name: First_Name,
+            Last_Name: Last_Name,
+            Is_Active: Is_Active
+        },{
+            where: {
+                id: User_id
+            }
+        }).then(()=>{
+            helper.sendResponse(res, 200, true, "Control user updated successfully");
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error updating control user. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.getControlUser = function(req, res){
+
+    //Extract route params
+    var User_id = req.params.user_id;
+
+    if(User_id != undefined){
+
+        //Fetch single user
+        control_user.findOne({
+            where:{
+                id: User_id
+            }
+        }).then(user_found=>{
+
+            if(user_found){
+                helper.sendResponse(res, 200, true, user_found);
+            }else{
+                helper.sendResponse(res, 200, false, "No user found");
+            }
+                
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error fetching user. Code 1.");
+        })
+
+    }else{
+
+        //Fetch all users
+        control_user.findAll().then(all_users=>{
+            helper.sendResponse(res, 200, true, all_users);
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error Fetching users. Code 2.");
+        })
+
+    }
+}
+
+exports.deleteControlUser = function(req, res){
+
+    //Extract body params
+    var User_id = req.body.User_id;
+
+    if(User_id){
+        //Fetch retailer db name so that it can be dropped later
+        control_user.findOne({
+            where:{
+                id: User_id
+            }
+        }).then(user_found=>{
+            
+            //Return if user not found
+            if(user_found){
+
+                //Delete the user
+                control_user.destroy({
+                    where:{
+                        id: User_id
+                    }
+                }).then(()=>{
+                    helper.sendResponse(res, 200, true, "User deleted successfully.");
+                }).catch(err=>{
+                    console.error(err);
+                    helper.sendResponse(res, 500, false, "Error deleting user. Code 1.");
+                });
+
+            }else{
+                helper.sendResponse(res, 200, false, "User not found");
+            }
+
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error deleting user. Code 1.");
+        });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.loginControlUser = function(req, res){
+
+    //Extract body params
+    var Username = req.body.Username;
+    var Password = req.body.Password;
+
+    //Check if params are available
+    if(Username && Password){
+        
+        //Hash the password using the secret
+        var hashed_password = crypto.createHmac('sha256', control_secret_key)
+                                    .update(Password)
+                                    .digest('hex');
+
+        //Query the database using hashed password
+        control_user.findOne({
+            attributes:{ exclude: ['Password'] },
+            where:{
+                Username: Username,
+                Password: hashed_password
+            }
+        }).then(user_found=>{
+            
+            //Check if the user is active
+            if(user_found.dataValues.Is_Active){
+                //Create JWT Token and return it to user
+
+                //JWT Payload will be having user details which are fetched from DB
+                var payload = user_found.dataValues;
+
+                //Set expiry date of the token as 7 days
+                var expiry = new Date();
+                expiry.setDate(expiry.getDate() + 7);
+
+                //Setting expiry date in the payload object
+                payload['exp'] = parseInt(expiry.getTime() / 1000);
+
+                //Generate token using jwt library
+                var token = jwt.sign(payload, jwt_secret_key);
+
+                //Send the token across
+                helper.sendResponse(res, 200, true, {token: token});
+
+            }else{
+                helper.sendResponse(res, 200, false, "User Inactive");
+            }
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Login Error. Code 1.");
+        });
+        
     }else{
         helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }

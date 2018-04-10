@@ -4,5 +4,7 @@
         "username":"prod-username",
         "password":"prod-password"
     },
-    "JwtSecret": "prod-jwt-secret"
+    "JwtSecret": "prod-jwt-secret",
+    "ControlSecret": "prod-control-secret",
+    "UserSecret": "prod-user-secret"
 }

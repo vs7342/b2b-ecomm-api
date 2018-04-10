@@ -20,7 +20,7 @@ app.use(body_parser.urlencoded({extended: true}));
 //Handling pre-flight requests - required for browsers
 app.use(function(req, res, next){
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Control-Authorization');
     res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
 
     if(req.method === 'OPTIONS'){
@@ -33,7 +33,7 @@ app.use(function(req, res, next){
 //Middleware stuff - CORS and API Key header
 app.use(function(req, res, next){
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Control-Authorization');
     res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE');
     next();
 })
@@ -54,7 +54,6 @@ app.post('/test', function(req, res){
     res.status(200).send(helper.getResponseObject(true, {'test_param': test_param}));
 })
 
-
 //Control DB Endpoints
 //Retailer
 app.post('/control/retailer', service_control.createRetailer);
@@ -62,3 +61,10 @@ app.put('/control/retailer', service_control.editRetailer);
 app.get('/control/retailer', service_control.getRetailer);
 app.get('/control/retailer/:retailer_id', service_control.getRetailer);
 app.delete('/control/retailer', service_control.deleteRetailer);
+//Control User
+app.post('/control/user', service_control.createControlUser);
+app.put('/control/user', service_control.editControlUser);
+app.get('/control/user', service_control.getControlUser);
+app.get('/control/user/:user_id', service_control.getControlUser);
+app.delete('/control/user', service_control.deleteControlUser);
+app.post('/control/user/login', service_control.loginControlUser);

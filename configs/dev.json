@@ -4,5 +4,7 @@
         "username":"dev-username",
         "password":"dev-password"
     },
-    "JwtSecret": "dev-jwt-secret"
+    "JwtSecret": "dev-jwt-secret",
+    "ControlSecret": "dev-control-secret",
+    "UserSecret": "dev-user-secret"
 }
