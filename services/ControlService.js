@@ -344,7 +344,7 @@ exports.deleteControlUser = function(req, res){
     var User_id = req.body.User_id;
 
     if(User_id){
-        //Fetch retailer db name so that it can be dropped later
+        //Fetch control user to check if present
         control_user.findOne({
             where:{
                 id: User_id

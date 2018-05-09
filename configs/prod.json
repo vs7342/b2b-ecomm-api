@@ -6,5 +6,18 @@
     },
     "JwtSecret": "prod-jwt-secret",
     "ControlSecret": "prod-control-secret",
-    "UserSecret": "prod-user-secret"
+    "UserSecret": "prod-user-secret",
+    "Gmail":{
+        "password": "prod-mail-password",
+        "email": "prod-email-id"
+    },
+    "FCM":{
+        "config_file": "dummy_fcm_config.json",
+        "database_url": "prod-firebase-db-url"
+    },
+    "TWILIO":{
+        "account_sid": "prod-twilio-accound-sid",
+        "auth_token": "prod-twilio-auth-token",
+        "from_twilio_number": "prod-from-twilio-number"
+    }
 }

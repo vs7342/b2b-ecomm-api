@@ -6,5 +6,19 @@
     },
     "JwtSecret": "dev-jwt-secret",
     "ControlSecret": "dev-control-secret",
-    "UserSecret": "dev-user-secret"
+    "UserSecret": "dev-user-secret",
+    "Gmail":{
+        "password": "dev-mail-password",
+        "email": "dev-email-id"
+    },
+    "FCM":{
+        "config_file": "dummy_fcm_config.json",
+        "database_url": "dev-firebase-db-url"
+    },
+    "TWILIO":{
+        "account_sid": "dev-twilio-accound-sid",
+        "auth_token": "dev-twilio-auth-token",
+        "from_twilio_number": "dev-from-twilio-number"
+    }
+
 }
