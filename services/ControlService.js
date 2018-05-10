@@ -435,6 +435,37 @@ exports.loginControlUser = function(req, res){
     }
 }
 
+exports.checkIfUrlAvailable = function(req, res){
+    //Extract query params
+    var Url_Part = req.query.Url_Part;
+
+    //Check if params are available
+    if(Url_Part){
+
+        //Query the db with Url_Part
+        retailer.findOne({
+            attributes:['Database_Name'],
+            where:{
+                Url_Part: Url_Part
+            }
+        }).then(retailer_found => {
+            if(retailer_found){
+                //Send a response that url is not available
+                helper.sendResponse(res, 200, true, {url_available: false});
+            }else{
+                //Send a response that url is available
+                helper.sendResponse(res, 200, true, {url_available: true});
+            }
+        }).catch(error => {
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error while checking url availability. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
 //Utility function to get database name from specified retailer url
 exports.getRetailerDBFromURL = function(url_part){
     return new Promise((resolve, reject) => {

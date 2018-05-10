@@ -90,6 +90,7 @@ app.put('/control/retailer', service_control.editRetailer);
 app.get('/control/retailer', service_control.getRetailer);
 app.get('/control/retailer/:retailer_id', service_control.getRetailer);
 app.delete('/control/retailer', service_control.deleteRetailer);
+app.get('/control/url/available', service_control.checkIfUrlAvailable);
 //Control User
 app.post('/control/user', service_control.createControlUser);
 app.put('/control/user', service_control.editControlUser);
