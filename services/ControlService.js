@@ -434,3 +434,23 @@ exports.loginControlUser = function(req, res){
         helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }
 }
+
+//Utility function to get database name from specified retailer url
+exports.getRetailerDBFromURL = function(url_part){
+    return new Promise((resolve, reject) => {
+        retailer.findOne({
+            attributes:['Database_Name'],
+            where:{
+                Url_Part: url_part
+            }
+        }).then(retailer_found => {
+            if(retailer_found){
+                resolve(retailer_found.Database_Name);
+            }else{
+                reject(null);
+            }
+        }).catch(error => {
+            reject(error);
+        });
+    })
+}

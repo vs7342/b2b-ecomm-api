@@ -8,6 +8,7 @@ var helper = require('./helper');
 
 //Importing Services
 var service_control = require("./services/ControlService");
+var service_user = require("./services/UserService");
 
 //Express app
 var app = express();
@@ -30,7 +31,15 @@ app.use(function(req, res, next){
     }
 })
 
-//Middleware stuff - CORS and API Key header
+//Endpoints for signup / login (signup - only for customers, login - all users inside a retailer db)
+app.post('/signup/:url_part', service_user.userSignup);
+app.post('/login/:url_part', service_user.login);
+
+//These 2 end points are just used to display error message when url part is not specified
+app.post('/signup', service_user.userSignup);
+app.post('/login', service_user.login);
+
+//Middleware stuff - CORS and Authorization header
 app.use(function(req, res, next){
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Control-Authorization');
