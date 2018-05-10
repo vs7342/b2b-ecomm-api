@@ -44,7 +44,27 @@ app.use(function(req, res, next){
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Control-Authorization');
     res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE');
-    next();
+
+    //Extract authorization header since it contains the jwt
+    var auth_header = req.headers['Authorization'] || req.headers['authorization'];
+
+    if(auth_header){
+        //Verify the signature/token
+        var decoded = helper.decodeToken(auth_header);
+        if(decoded !== null){
+            //Token Valid
+            //Extract Retailer_DB from token and attach it to the request body
+            //This body param will be used inside the endpoint function to determine which DB should be used.
+            req.body.Retailer_DB = decoded.Retailer_DB;
+            next();
+        }else{
+            //Token Invalid
+            helper.sendResponse(res, 401, false, "Invalid Token.");
+        }
+
+    }else{
+        helper.sendResponse(res, 400, false, "Please provide a token.");
+    }
 })
 
 //Server will accept request on port 80

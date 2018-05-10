@@ -4,6 +4,7 @@
 
 //Node libraries
 var Sequelize = require('sequelize');
+var jwt = require('jsonwebtoken');
 var nodemailer = require('nodemailer');
 var firebase_admin = require('firebase-admin');
 
@@ -79,6 +80,25 @@ module.exports.getAgencySeq = function(dbname){
         timezone: 'America/New_York'
     });
 };
+
+/**
+ * @author Vidit Singhal
+ * @param {string} token JWT Token which needs to be decoded
+ * @description Verifies whether the token is valid or not. If valid, decoded value is returned. Else null is returned.
+ */
+module.exports.decodeToken = function(token) {
+    //Fetch JWT Secret key from the config
+    var jwt_secret_key = require(config_file_name).JwtSecret;
+
+    //Call the verify method of jwt and return the decoded value. If it cannot be decoded, return null.
+    return jwt.verify(token, jwt_secret_key, (error, decoded) => {
+        if(error){
+            return null;
+        }else{
+            return decoded;
+        }
+    });
+}
 
 /**
  * @author Vidit Singhal
