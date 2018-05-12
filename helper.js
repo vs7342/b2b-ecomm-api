@@ -84,11 +84,17 @@ module.exports.getAgencySeq = function(dbname){
 /**
  * @author Vidit Singhal
  * @param {string} token JWT Token which needs to be decoded
+ * @param {boolean} isControl Whether to use control jwt secret to decode or not
  * @description Verifies whether the token is valid or not. If valid, decoded value is returned. Else null is returned.
  */
-module.exports.decodeToken = function(token) {
+module.exports.decodeToken = function(token, isControl) {
     //Fetch JWT Secret key from the config
-    var jwt_secret_key = require(config_file_name).JwtSecret;
+    var jwt_secret_key;
+    if(isControl){
+        jwt_secret_key = require(config_file_name).JwtSecretControl;
+    }else{
+        jwt_secret_key = require(config_file_name).JwtSecret;
+    }
 
     //Call the verify method of jwt and return the decoded value. If it cannot be decoded, return null.
     return jwt.verify(token, jwt_secret_key, (error, decoded) => {

@@ -5,6 +5,7 @@
         "password":"dev-password"
     },
     "JwtSecret": "dev-jwt-secret",
+    "JwtSecretControl": "dev-control-jwt-secret",
     "ControlSecret": "dev-control-secret",
     "UserSecret": "dev-user-secret",
     "Gmail":{

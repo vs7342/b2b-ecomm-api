@@ -5,6 +5,7 @@
         "password":"prod-password"
     },
     "JwtSecret": "prod-jwt-secret",
+    "JwtSecretControl": "prod-control-jwt-secret",
     "ControlSecret": "prod-control-secret",
     "UserSecret": "prod-user-secret",
     "Gmail":{

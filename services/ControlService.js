@@ -25,7 +25,7 @@ var retailer = new Retailer().dbSeq;
 var config_file_name = '../configs/' + helper.ENVIRONMENT + '.json';
 var mysql_config = require(config_file_name).MySQL;
 var control_secret_key = require(config_file_name).ControlSecret;
-var jwt_secret_key = require(config_file_name).JwtSecret;
+var jwt_secret_key = require(config_file_name).JwtSecretControl;
 
 exports.createRetailer = function(req, res){
     

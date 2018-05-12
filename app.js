@@ -44,7 +44,7 @@ control_app.use(function(req, res, next){
 
     if(auth_header){
         //Verify the signature/token
-        var decoded = helper.decodeToken(auth_header);
+        var decoded = helper.decodeToken(auth_header, true);
         if(decoded !== null){
             //Token Valid
             //Extract Retailer_DB from token and attach it to the request body
@@ -118,7 +118,7 @@ app.use(function(req, res, next){
 
     if(auth_header){
         //Verify the signature/token
-        var decoded = helper.decodeToken(auth_header);
+        var decoded = helper.decodeToken(auth_header, false);
         if(decoded !== null){
             //Token Valid
             //Extract Retailer_DB from token and attach it to the request body
