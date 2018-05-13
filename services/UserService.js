@@ -184,7 +184,269 @@ exports.login = function (req, res){
     }
 }
 
-//Utility Function
+exports.createUser = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+    var user_notification_setting = new UserNotificationSetting(Retailer_DB).dbSeq;
+
+    //Extract body params
+    var Email = req.body.Email;
+    var Password = req.body.Password;
+    var First_Name = req.body.First_Name;
+    var Last_Name = req.body.Last_Name;
+    var UserType_id = req.body.UserType_id;
+    var Mobile_Number = req.body.Mobile_Number;
+
+    //Check if necessary params were sent
+    if(Email && Password && First_Name && Last_Name && UserType_id && Mobile_Number){
+
+        //Check if email is already used
+        user.findOne({
+            where:{
+                Email: Email
+            }
+        }).then(email_existing_user=>{
+            if(!email_existing_user){
+                //No users were found with that email..proceed with user creation
+                //Hash the password to be stored in DB
+                var hashed_password = crypto.createHmac('sha256', user_secret_key)
+                                    .update(Password)
+                                    .digest('hex');
+
+                //Create the user in DB
+                user.create({
+                    Email: Email,
+                    UserType_id: UserType_id,
+                    Password: hashed_password,
+                    First_Name: First_Name,
+                    Last_Name: Last_Name,
+                    Mobile_Number: Mobile_Number,
+                    FCM_token: ""
+                }).then(user_created=>{
+                    
+                    //Create notification setting for the user
+                    user_notification_setting.create({
+                        User_id: user_created.id,
+                        Desktop: true,
+                        SMS: true,
+                        Email: true
+                    }).then(()=>{
+                        helper.sendResponse(res, 200, true, "User created successfully");
+                    }).catch(err=>{
+                        console.error(err);
+                        helper.sendResponse(res, 500, false, "Error creating user. Code 2.");
+                    });
+
+                    
+                }).catch(err=>{
+                    console.error(err);
+                    helper.sendResponse(res, 500, false, "Error creating user. Code 2.");
+                });
+
+            }else{
+                helper.sendResponse(res, 200, false, "Email already exists.");
+            }
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error creating user. Code 1.");
+        });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+};
+
+exports.editUser = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+
+    //Extract body params
+    var id = req.body.id;
+    var Email = req.body.Email;
+    var Password = req.body.Password;
+    var First_Name = req.body.First_Name;
+    var Last_Name = req.body.Last_Name;
+    var UserType_id = req.body.UserType_id;
+    var Mobile_Number = req.body.Mobile_Number;
+
+    //Check if necessary params were sent
+    if(Email && Password && First_Name && Last_Name && Mobile_Number){
+        //Hash the password to be stored in DB
+        var hashed_password = crypto.createHmac('sha256', user_secret_key)
+                            .update(Password)
+                            .digest('hex');
+
+        //Update the user in DB
+        user.update({
+            Email: Email,
+            UserType_id: UserType_id,
+            Password: hashed_password,
+            First_Name: First_Name,
+            Last_Name: Last_Name,
+            Mobile_Number: Mobile_Number
+        },{
+            where:{
+                id: id
+            }
+        }).then(()=>{
+            helper.sendResponse(res, 200, true, "User updated successfully");
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error updating user. Code 1.");
+        });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.getUser = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+
+    //Extract route params
+    var User_id = req.params.user_id;
+
+    //Check if necessary params were sent
+    if(User_id != undefined){
+
+        //Get single user
+        user.findOne({
+            attributes:{
+                exclude: ['Password', 'FCM_token']
+            },
+            where:{
+                id: User_id
+            }
+        }).then((user_found)=>{
+            helper.sendResponse(res, 200, true, user_found);
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error Fetching User. Code 1.");
+        });
+
+    }else{
+
+        //Get all users
+        user.findAll({
+            attributes:{
+                exclude: ['Password', 'FCM_token']
+            }
+        }).then(users=>{
+            helper.sendResponse(res, 200, true, users);
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error Fetching Users. Code 1.");
+        });
+
+    }
+}
+
+exports.editNotificationSetting = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user_notification_setting = new UserNotificationSetting(Retailer_DB).dbSeq;
+
+    //Extract body params
+    var Desktop = req.body.Desktop;
+    var SMS = req.body.SMS;
+    var Email = req.body.Email;
+    var User_id = req.body.User_id;
+
+    //Check if necessary params were sent
+    if(Desktop != undefined && SMS != undefined && Email != undefined && User_id){
+        
+        //Update the setting
+        user_notification_setting.update({
+            Desktop: Desktop,
+            SMS: SMS,
+            Email: Email
+        },{
+            where:{
+                User_id: User_id
+            }
+        }).then(()=>{
+            helper.sendResponse(res, 200, true, "Notification setting updated successfully.");
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error updating notification setting. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.getNotificationSetting = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user_notification_setting = new UserNotificationSetting(Retailer_DB).dbSeq;
+
+    //Extract query params
+    var User_id = req.query.User_id;
+
+    //Check if necessary params were sent
+    if(User_id){
+        
+        //Fetch notification setting
+        user_notification_setting.findOne({
+            where:{
+                User_id: User_id
+            }
+        }).then((settings_found)=>{
+            helper.sendResponse(res, 200, true, settings_found);
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error fetching notification setting. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+exports.editFCMToken = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+
+    //Extract body params
+    var id = req.body.id;
+    var FCM_token = req.body.FCM_token;
+
+    //Check if necessary params were sent
+    if(id && FCM_token){
+        user.update({
+            FCM_token: FCM_token
+        },{
+            where:{
+                id: id
+            }
+        }).then(()=>{
+            helper.sendResponse(res, 200, true, "FCM Token updated successfully.");
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error Updating FCM Token. Code 1.");
+        });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
+//Utility Function to construct jwt with the given payload.
 function constructJwt(payload){
     //Set expiry date of the token as 7 days
     var expiry = new Date();

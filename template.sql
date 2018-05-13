@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `User` (
   `First_Name` VARCHAR(50) NULL COMMENT '',
   `Last_Name` VARCHAR(50) NULL COMMENT '',
   `Mobile_Number` VARCHAR(20) NULL COMMENT '',
-  `FCM_token` VARCHAR(100) NULL COMMENT '',
+  `FCM_token` VARCHAR(200) NULL COMMENT '',
   PRIMARY KEY (`id`)  COMMENT '',
   UNIQUE INDEX `email_UNIQUE` (`Email` ASC)  COMMENT '',
   INDEX `fk_User_UserType1_idx` (`UserType_id` ASC)  COMMENT '',

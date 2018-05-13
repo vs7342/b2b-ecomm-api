@@ -135,6 +135,17 @@ app.use(function(req, res, next){
     }
 })
 
+// Retailer DB Endpoints
+
+//User Service
+app.post('/user', service_user.createUser);
+app.put('/user', service_user.editUser);
+app.get('/user', service_user.getUser);
+app.get('/user/:user_id', service_user.getUser);
+app.put('/notification', service_user.editNotificationSetting);
+app.get('/notification', service_user.getNotificationSetting);
+app.put('/fcm', service_user.editFCMToken);
+
 //Create server from the main app
 var server = http.createServer(app);
 
