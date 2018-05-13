@@ -9,6 +9,7 @@ var helper = require('./helper');
 //Importing Services
 var service_control = require("./services/ControlService");
 var service_user = require("./services/UserService");
+var service_address = require("./services/AddressService");
 
 //Express sub-app for control services
 var control_app = express();
@@ -145,6 +146,11 @@ app.get('/user/:user_id', service_user.getUser);
 app.put('/notification', service_user.editNotificationSetting);
 app.get('/notification', service_user.getNotificationSetting);
 app.put('/fcm', service_user.editFCMToken);
+
+//Address Service
+app.post('/address', service_address.createAddress);
+app.put('/address', service_address.editAddress);
+app.get('/address', service_address.getAddress);
 
 //Create server from the main app
 var server = http.createServer(app);
