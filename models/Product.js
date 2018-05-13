@@ -10,7 +10,12 @@ module.exports = function(agency_dbname){
     this.dbSeq = agency_seq.define('Product', {
         Name: Sequelize.STRING,
         Short_Description: Sequelize.STRING,
-        Detail_Description: Sequelize.BLOB,
+        Detail_Description: {
+            type: Sequelize.BLOB,
+            get() {
+                return this.getDataValue('Detail_Description').toString('utf8');
+            }
+        },
         Price: Sequelize.DOUBLE,
         Image_Url: Sequelize.STRING,
         Quantity: Sequelize.INTEGER,

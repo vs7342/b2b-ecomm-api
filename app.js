@@ -10,6 +10,7 @@ var helper = require('./helper');
 var service_control = require("./services/ControlService");
 var service_user = require("./services/UserService");
 var service_address = require("./services/AddressService");
+var service_product = require("./services/ProductService");
 
 //Express sub-app for control services
 var control_app = express();
@@ -151,6 +152,13 @@ app.put('/fcm', service_user.editFCMToken);
 app.post('/address', service_address.createAddress);
 app.put('/address', service_address.editAddress);
 app.get('/address', service_address.getAddress);
+
+//Product Service
+app.post('/product', service_product.createProduct);
+app.put('/product', service_product.editProduct);
+app.get('/product', service_product.getProduct);
+app.get('/product/:product_id', service_product.getProduct);
+app.post('/alert', service_product.createAlert);
 
 //Create server from the main app
 var server = http.createServer(app);
