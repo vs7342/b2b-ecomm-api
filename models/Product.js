@@ -13,7 +13,10 @@ module.exports = function(agency_dbname){
         Detail_Description: {
             type: Sequelize.BLOB,
             get() {
-                return this.getDataValue('Detail_Description').toString('utf8');
+                var Detail_Description = this.getDataValue('Detail_Description');
+                if(Detail_Description){
+                    return Detail_Description.toString('utf8');
+                }
             }
         },
         Price: Sequelize.DOUBLE,

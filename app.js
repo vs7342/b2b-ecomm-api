@@ -11,6 +11,7 @@ var service_control = require("./services/ControlService");
 var service_user = require("./services/UserService");
 var service_address = require("./services/AddressService");
 var service_product = require("./services/ProductService");
+var service_cart = require("./services/CartService");
 
 //Express sub-app for control services
 var control_app = express();
@@ -159,6 +160,12 @@ app.put('/product', service_product.editProduct);
 app.get('/product', service_product.getProduct);
 app.get('/product/:product_id', service_product.getProduct);
 app.post('/alert', service_product.createAlert);
+
+//Cart Service
+app.post('/cart', service_cart.addProductToCart);
+app.put('/cart', service_cart.changeProductQuantity);
+app.get('/cart', service_cart.getCartForUser);
+app.delete('/cart', service_cart.emptyCart);
 
 //Create server from the main app
 var server = http.createServer(app);
