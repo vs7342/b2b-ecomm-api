@@ -16,6 +16,10 @@ var helper = require("../helper");
 var ControlUser = require("../models/control/ControlUser");
 var Retailer = require("../models/control/Retailer");
 
+//Required models (Retailer DB)
+var User = require('../models/User');
+var UserNotificationSetting = require('../models/UserNotificationSetting');
+
 //Create instances of these models
 var ControlSeq = helper.getAgencySeq('control');
 var control_user = new ControlUser().dbSeq;
@@ -26,6 +30,7 @@ var config_file_name = '../configs/' + helper.ENVIRONMENT + '.json';
 var mysql_config = require(config_file_name).MySQL;
 var control_secret_key = require(config_file_name).ControlSecret;
 var jwt_secret_key = require(config_file_name).JwtSecretControl;
+var retailer_user_secret_key = require(config_file_name).UserSecret;
 
 exports.createRetailer = function(req, res){
     
@@ -35,9 +40,10 @@ exports.createRetailer = function(req, res){
     var Url_Part = req.body.Url_Part;
     var Website_Title = req.body.Website_Title;
     var Client_Template_id = req.body.Client_Template_id;
+    var First_User_Email = req.body.First_User_Email;
 
     //Check if all params are provided
-    if(Name && Time_Zone && Url_Part && Website_Title && Client_Template_id){
+    if(Name && Time_Zone && Url_Part && Website_Title && Client_Template_id && First_User_Email){
         
         //Create Database Name
         var processed_db_name = 'Retailer_' + generator.generate({
@@ -80,17 +86,93 @@ exports.createRetailer = function(req, res){
                     //As per the library, (then) should be executed after all the statements are executed in sql file
                     //But I dont think so it works and thus adding 10 seconds wait
                     setTimeout(()=>{
+
+                        //Generate random password for first user
+                        var first_user_password = generator.generate({
+                            length: 10,
+                            numbers: true,
+                            symbols: true,
+                            uppercase: true,
+                            excludeSimilarCharacters: true
+                        });
+
+                        //Hash the pwd to store in DB
+                        var hashed_password = crypto.createHmac('sha256', retailer_user_secret_key)
+                                            .update(first_user_password)
+                                            .digest('hex');
                         
-                        //TODO: Create default entries (Eg. First Retailer Admin)
+                        //Define models for that database
+                        var user = new User(processed_db_name).dbSeq;
+                        var user_notification_setting = new UserNotificationSetting(processed_db_name).dbSeq;
+                        
+                        //1. Create the first retailer admin
+                        user.create({
+                            Email: First_User_Email,
+                            UserType_id: 3,
+                            Password: hashed_password,
+                            First_Name: "Admin FName",
+                            Last_Name: "Admin LName",
+                            Mobile_Number: "",
+                            FCM_token: ""
+                        }).then(user_created => {
 
-                        //TODO: Set Is_Processed = 1 for created retailer in control db
+                            //2. Default notification settings
+                            user_notification_setting.create({
+                                User_id: user_created.id,
+                                Desktop: true,
+                                SMS: true,
+                                Email: true
+                            }).then(setting_created => {
 
-                        //Return 200
-                        helper.sendResponse(res, 200, true, created_retailer);
+                                //3. Update the retailer table - Is_Processed = true
+                                retailer.update({
+                                    Is_Processed: true
+                                },{
+                                    where: {
+                                        id: created_retailer.id
+                                    }
+                                }).then(() => {
+
+                                    //Finally send the response
+                                    helper.sendResponse(res, 200, true, created_retailer);
+
+                                    //4. (Async) Send an email to First Retailer Admin User with login credentials
+                                    helper.sendEmail(
+                                        [First_User_Email], 
+                                        'Action Required: Reset your password!',
+                                        `<p>
+                                        Congratulations, <br/><br/>
+                                        
+                                        Your website is all set. Kindly login with the following info: <br/>
+                                        Email: ` + First_User_Email + ` <br/>
+                                        Password: ` + first_user_password + ` <br/><br/>
+
+                                        It is recommended that you reset your password when you login. <br/><br/>
+
+                                        Regards, <br/>
+                                        B2BComm Team.
+                                        </p>`
+                                    );
+
+                                }).catch(err=> {
+                                    console.error(err);
+                                    helper.sendResponse(res, 500, false, "Retailer DB Created. Error Creating First/Default values. Code 3.");
+                                });
+
+                            }).catch(err=> {
+                                console.error(err);
+                                helper.sendResponse(res, 500, false, "Retailer DB Created. Error Creating First/Default values. Code 2.");
+                            });
+
+                        }).catch(err=> {
+                            console.error(err);
+                            helper.sendResponse(res, 500, false, "Retailer DB Created. Error Creating First/Default values. Code 1.");
+                        });
 
                     }, 10000)
-                }).catch( err => {
+                }).catch(err=> {
                     console.error(err);
+                    helper.sendResponse(res, 500, false, "Error creating retailer. Code 3.");
                 })
 
             }).catch(err=>{
