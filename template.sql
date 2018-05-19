@@ -135,7 +135,6 @@ CREATE TABLE IF NOT EXISTS `Order` (
   INDEX `fk_Order_StatusType1_idx` (`StatusType_id` ASC)  COMMENT '',
   INDEX `fk_Order_Address1_idx` (`Shipping_Address_id` ASC)  COMMENT '',
   INDEX `fk_Order_Address2_idx` (`Billing_Address_id` ASC)  COMMENT '',
-  UNIQUE INDEX `Tracking_id_UNIQUE` (`Tracking_id` ASC)  COMMENT '',
   CONSTRAINT `fk_Order_User1`
     FOREIGN KEY (`User_id`)
     REFERENCES `User` (`id`)

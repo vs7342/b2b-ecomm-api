@@ -211,7 +211,7 @@ var initializeFCM = function(){
  * @param {string} notification_data notification data
  * @description - Sends notification to the recipient with specified fcm token
  */
-module.exports.sendNotification = function(fcm_token, notification_title, notification_body, notification_data){
+module.exports.sendNotification = function(fcm_token, notification_title, notification_body){
 
     //Function takes care of not initializing the app more than once
     initializeFCM();
@@ -220,8 +220,7 @@ module.exports.sendNotification = function(fcm_token, notification_title, notifi
     var payload = {
         notification: {
             title: notification_title,
-            body: notification_body,
-            data: notification_data
+            body: notification_body
         },
         token: fcm_token
     };
