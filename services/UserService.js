@@ -89,7 +89,7 @@ exports.userSignup = function(req, res){
                         });
 
                     }else{
-                        helper.sendResponse(res, 200, false, "Email already exists.");
+                        helper.sendResponse(res, 400, false, "Email already exists.");
                     }
                 }).catch(err=>{
                     console.error(err);
@@ -247,7 +247,7 @@ exports.createUser = function(req, res){
                 });
 
             }else{
-                helper.sendResponse(res, 200, false, "Email already exists.");
+                helper.sendResponse(res, 400, false, "Email already exists.");
             }
         }).catch(err=>{
             console.error(err);

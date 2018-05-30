@@ -286,11 +286,11 @@ exports.createOrder = function(req, res){
 
                         }else{
                             //Product Qty invalid
-                            helper.sendResponse(res, 200, false, "Cannot complete the order. Product out of stock / Lesser quantity available in inventory.");
+                            helper.sendResponse(res, 400, false, "Cannot complete the order. Product out of stock / Lesser quantity available in inventory.");
                         }
                     }else{
                         //No products found in cart.. Cannot create order
-                        helper.sendResponse(res, 200, false, "Cannot create order. No products found in cart.");
+                        helper.sendResponse(res, 404, false, "Cannot create order. No products found in cart.");
                     }
                 }).catch(err=>{
                     console.error(err);
@@ -299,7 +299,7 @@ exports.createOrder = function(req, res){
 
             }else{
                 //Addresses are invalid
-                helper.sendResponse(res, 200, false, "Invalid Address.");
+                helper.sendResponse(res, 400, false, "Invalid Address.");
             }
         }).catch(err=>{
             console.error(err);

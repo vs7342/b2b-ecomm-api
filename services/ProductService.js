@@ -165,7 +165,7 @@ exports.editProduct = function(req, res){
                     helper.sendResponse(res, 500, false, "Error Updating Product. Code 2.");
                 });
             }else{
-                helper.sendResponse(res, 200, false, "Product not found.");
+                helper.sendResponse(res, 404, false, "Product not found.");
             }
 
         }).catch(err=>{
@@ -253,7 +253,7 @@ exports.createAlert = function(req, res){
                 });
 
             }else{
-                helper.sendResponse(res, 200, false, "Alert already exists. Cannot create a duplicate.");
+                helper.sendResponse(res, 400, false, "Alert already exists. Cannot create a duplicate.");
             }
         }).catch(err=>{
             console.error(err);

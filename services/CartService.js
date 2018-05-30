@@ -68,7 +68,7 @@ exports.addProductToCart = function(req, res){
                                 });
 
                             }else{
-                                helper.sendResponse(res, 200, false, "Product already exists in cart. Try updating quantity."); 
+                                helper.sendResponse(res, 400, false, "Product already exists in cart. Try updating quantity."); 
                             }
                         }).catch(err=>{
                             console.error(err);
@@ -76,7 +76,7 @@ exports.addProductToCart = function(req, res){
                         });
 
                     }else{
-                        helper.sendResponse(res, 200, false, "Product not found / Not enough quantity available."); 
+                        helper.sendResponse(res, 404, false, "Product not found / Not enough quantity available."); 
                     }
                 }).catch(err=>{
                     console.error(err);
@@ -84,7 +84,7 @@ exports.addProductToCart = function(req, res){
                 });
 
             }else{
-                helper.sendResponse(res, 200, false, "User not found."); 
+                helper.sendResponse(res, 404, false, "User not found."); 
             }
         }).catch(err=>{
             console.error(err);
@@ -156,7 +156,7 @@ exports.changeProductQuantity = function(req, res){
                         helper.sendResponse(res, 500, false, "Error Updating Cart. Code 1.");
                     });
                 }else{
-                    helper.sendResponse(res, 200, false, "Cannot update. Cart with specified ID not found / Try updating with a reduced quantity.");
+                    helper.sendResponse(res, 404, false, "Cannot update. Cart with specified ID not found / Try updating with a reduced quantity.");
                 }
 
             }).catch(err=>{

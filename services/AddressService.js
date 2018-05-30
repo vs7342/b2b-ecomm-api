@@ -53,7 +53,7 @@ exports.createAddress = function(req, res){
                 });
             
             }else{
-                helper.sendResponse(res, 200, false, "User not found.");
+                helper.sendResponse(res, 404, false, "User not found.");
             }
 
         }).catch(err=>{
