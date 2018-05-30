@@ -193,7 +193,7 @@ exports.createRetailer = function(req, res){
 exports.editRetailer = function(req, res){
 
     //Extract request body params
-    var Retailer_id = req.body.Retailer_id;
+    var id = req.body.id;
     var Name = req.body.Name;
     var Time_Zone = req.body.Time_Zone;
     var Url_Part = req.body.Url_Part;
@@ -202,7 +202,7 @@ exports.editRetailer = function(req, res){
     var Is_Processed = req.body.Is_Processed;
 
     //Check if all params are provided
-    if(Retailer_id && Name && Time_Zone && Url_Part && Website_Title && Client_Template_id && Is_Processed){
+    if(id && Name && Time_Zone && Url_Part && Website_Title && Client_Template_id && Is_Processed != undefined){
 
         //Update the entry in Control DB - Retailer table
         retailer.update({
@@ -214,13 +214,13 @@ exports.editRetailer = function(req, res){
             Is_Processed: Is_Processed
         },{
             where:{
-                id: Retailer_id
+                id: id
             }
         }).then(() => {
             helper.sendResponse(res, 200, true, "Retailer updated successfully.");
         }).catch(err=>{
             console.error(err);
-            helper.sendResponse(res, 500, false, "Error creating retailer. Code 1.");
+            helper.sendResponse(res, 500, false, "Error updating retailer. Code 1.");
         });
 
     }else{
@@ -244,7 +244,7 @@ exports.getRetailer = function(req, res){
             if(retailer_found){
                 helper.sendResponse(res, 200, true, retailer_found);
             }else{
-                helper.sendResponse(res, 200, false, "No retailer found");
+                helper.sendResponse(res, 404, false, "No retailer found");
             }
                 
         }).catch(err=>{
@@ -265,20 +265,20 @@ exports.getRetailer = function(req, res){
 exports.deleteRetailer = function(req, res){
 
     //Extract body params
-    var Retailer_id = req.body.Retailer_id;
+    var id = req.body.id;
 
-    if(Retailer_id){
+    if(id){
         //Fetch retailer db name so that it can be dropped later
         retailer.findOne({
             where:{
-                id: Retailer_id
+                id: id
             }
         }).then(retailer_found=>{
 
             //Now drop the entry from control database - retailer table
             retailer.destroy({
                 where:{
-                    id: Retailer_id
+                    id: id
                 }
             }).then(()=>{
 
@@ -344,7 +344,7 @@ exports.createControlUser = function(req, res){
 exports.editControlUser = function(req, res){
 
     //Extract body params
-    var User_id = req.body.User_id;
+    var id = req.body.id;
     var Username = req.body.Username;
     var Password = req.body.Password;
     var First_Name = req.body.First_Name;
@@ -352,7 +352,7 @@ exports.editControlUser = function(req, res){
     var Is_Active = req.body.Is_Active;
 
     //Check if all params are provided
-    if(User_id && Username && Password && First_Name && Last_Name && Is_Active != undefined){
+    if(id && Username && Password && First_Name && Last_Name && Is_Active != undefined){
 
         //Create Hashed password to store in DB
         var hashed_password = crypto.createHmac('sha256', control_secret_key)
@@ -368,7 +368,7 @@ exports.editControlUser = function(req, res){
             Is_Active: Is_Active
         },{
             where: {
-                id: User_id
+                id: id
             }
         }).then(()=>{
             helper.sendResponse(res, 200, true, "Control user updated successfully");
@@ -391,6 +391,9 @@ exports.getControlUser = function(req, res){
 
         //Fetch single user
         control_user.findOne({
+            attributes:{
+                exclude: ['Password']
+            },
             where:{
                 id: User_id
             }
@@ -399,7 +402,7 @@ exports.getControlUser = function(req, res){
             if(user_found){
                 helper.sendResponse(res, 200, true, user_found);
             }else{
-                helper.sendResponse(res, 200, false, "No user found");
+                helper.sendResponse(res, 404, false, "No user found");
             }
                 
         }).catch(err=>{
@@ -410,7 +413,11 @@ exports.getControlUser = function(req, res){
     }else{
 
         //Fetch all users
-        control_user.findAll().then(all_users=>{
+        control_user.findAll({
+            attributes:{
+                exclude: ['Password']
+            }
+        }).then(all_users=>{
             helper.sendResponse(res, 200, true, all_users);
         }).catch(err=>{
             console.error(err);
@@ -423,13 +430,13 @@ exports.getControlUser = function(req, res){
 exports.deleteControlUser = function(req, res){
 
     //Extract body params
-    var User_id = req.body.User_id;
+    var id = req.body.id;
 
-    if(User_id){
+    if(id){
         //Fetch control user to check if present
         control_user.findOne({
             where:{
-                id: User_id
+                id: id
             }
         }).then(user_found=>{
             
@@ -439,7 +446,7 @@ exports.deleteControlUser = function(req, res){
                 //Delete the user
                 control_user.destroy({
                     where:{
-                        id: User_id
+                        id: id
                     }
                 }).then(()=>{
                     helper.sendResponse(res, 200, true, "User deleted successfully.");
@@ -449,7 +456,7 @@ exports.deleteControlUser = function(req, res){
                 });
 
             }else{
-                helper.sendResponse(res, 200, false, "User not found");
+                helper.sendResponse(res, 404, false, "User not found");
             }
 
         }).catch(err=>{
@@ -483,30 +490,37 @@ exports.loginControlUser = function(req, res){
                 Password: hashed_password
             }
         }).then(user_found=>{
-            
-            //Check if the user is active
-            if(user_found.dataValues.Is_Active){
-                //Create JWT Token and return it to user
 
-                //JWT Payload will be having user details which are fetched from DB
-                var payload = user_found.dataValues;
+            if(user_found){
 
-                //Set expiry date of the token as 7 days
-                var expiry = new Date();
-                expiry.setDate(expiry.getDate() + 7);
+                //Check if the user is active
+                if(user_found.dataValues.Is_Active){
+                    //Create JWT Token and return it to user
 
-                //Setting expiry date in the payload object
-                payload['exp'] = parseInt(expiry.getTime() / 1000);
+                    //JWT Payload will be having user details which are fetched from DB
+                    var payload = user_found.dataValues;
 
-                //Generate token using jwt library
-                var token = jwt.sign(payload, jwt_secret_key);
+                    //Set expiry date of the token as 7 days
+                    var expiry = new Date();
+                    expiry.setDate(expiry.getDate() + 7);
 
-                //Send the token across
-                helper.sendResponse(res, 200, true, {token: token});
+                    //Setting expiry date in the payload object
+                    payload['exp'] = parseInt(expiry.getTime() / 1000);
+
+                    //Generate token using jwt library
+                    var token = jwt.sign(payload, jwt_secret_key);
+
+                    //Send the token across
+                    helper.sendResponse(res, 200, true, {token: token});
+
+                }else{
+                    helper.sendResponse(res, 404, false, "User Inactive");
+                }
 
             }else{
-                helper.sendResponse(res, 200, false, "User Inactive");
+                helper.sendResponse(res, 404, false, "Incorrect username/password");
             }
+            
         }).catch(err=>{
             console.error(err);
             helper.sendResponse(res, 500, false, "Login Error. Code 1.");
