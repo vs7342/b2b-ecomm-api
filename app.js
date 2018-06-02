@@ -103,6 +103,31 @@ app.use(function(req, res, next){
     }
 })
 
+//Public Endpoints
+app.get('/public/retailers', service_control.getAllRetailers);
+app.get(['/public/:url_part/products/', '/public/:url_part/products/:product_id'], (req, res) => {
+    var url_part = req.params.url_part
+    if(url_part){
+
+        // Fetch Retailer DB from URL
+        service_control.getRetailerDBFromURL(url_part).then(Retailer_DB => {
+            //Add Retailer DB in the request body and call product service's method
+            req.body.Retailer_DB = Retailer_DB;
+            return service_product.getProduct(req, res);
+        }).catch(error => {
+            //If error is null - meaning no retailer was found against the specified url part
+            if(error === null){
+                helper.sendResponse(res, 400, false, "Retailer not found");
+            }else{
+                helper.sendResponse(res, 500, false, "Error fetching product(s). Code 0.");
+            }
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters - URL PART");
+    }
+});
+
 //Endpoints for signup / login (signup - only for customers, login - all users inside a retailer db)
 app.post('/signup/:url_part', service_user.userSignup);
 app.post('/login/:url_part', service_user.login);

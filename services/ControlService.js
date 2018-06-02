@@ -552,7 +552,7 @@ exports.checkIfUrlAvailable = function(req, res){
                 //Send a response that url is available
                 helper.sendResponse(res, 200, true, {url_available: true});
             }
-        }).catch(error => {
+        }).catch(err => {
             console.error(err);
             helper.sendResponse(res, 500, false, "Error while checking url availability. Code 1.");
         });
@@ -560,6 +560,21 @@ exports.checkIfUrlAvailable = function(req, res){
     }else{
         helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }
+}
+
+exports.getAllRetailers = function(req, res){
+    // Find all the retailers which are processed
+    retailer.findAll({
+        attributes:['Website_Title', 'Url_Part'],
+        where:{
+            Is_Processed: true
+        }
+    }).then(retailers_found =>{
+        helper.sendResponse(res, 200, true, retailers_found);
+    }).catch(err => {
+        console.error(err);
+        helper.sendResponse(res, 500, false, "Error fetching retailers. Code 1.");
+    });
 }
 
 //Utility function to get database name from specified retailer url
