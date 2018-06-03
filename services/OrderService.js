@@ -325,6 +325,7 @@ exports.getOrder = function(req, res){
     //Extract query params
     var Order_id = req.query.Order_id;
     var User_id = req.query.User_id;
+    var StatusType_id = req.query.StatusType_id;
 
     //Defining associations
     order.hasMany(order_product, {foreignKey: 'Order_id'});
@@ -399,16 +400,24 @@ exports.getOrder = function(req, res){
             helper.sendResponse(res, 500, false, "Error fetching order. Code 1.");
         });
         
-    }else
+    }else {
 
-    //Find Orders for a user
-    if(User_id){
+        //Find Orders for a user / Find all orders for a particular StatusType_id / Find all orders (All Orders ~ StatusType_id = 0)
+        //Create where clause based on query param
+        var where_clause = {};
+        if(User_id){
+            where_clause = {
+                User_id: User_id
+            }
+        }else if(StatusType_id != undefined && StatusType_id != 0){
+            where_clause = {
+                StatusType_id: StatusType_id
+            }
+        }
 
         //Query DB
         order.findAll({
-            where:{
-                User_id: User_id
-            },
+            where: where_clause,
             include: [
                 {
                     model: order_product,
@@ -478,8 +487,6 @@ exports.getOrder = function(req, res){
             helper.sendResponse(res, 500, false, "Error fetching orders. Code 1.");
         });
 
-    }else{
-        helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }
 };
 
