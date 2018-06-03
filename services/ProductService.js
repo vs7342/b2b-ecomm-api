@@ -264,3 +264,40 @@ exports.createAlert = function(req, res){
         helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }
 }
+
+exports.getAlert = function(req, res) {
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var alert = new Alert(Retailer_DB).dbSeq;
+
+    //Extract query params
+    var Product_id = req.query.Product_id;
+    var User_id = req.query.User_id;
+
+    //Check if necessary params were sent
+    if(Product_id && User_id){
+
+        //Check to see if an alert exists and has not been triggered yet
+        alert.findOne({
+            where:{
+                User_id: User_id,
+                Product_id: Product_id,
+                Is_Triggered: false
+            }
+        }).then(alert_found =>{
+            if(alert_found){
+                helper.sendResponse(res, 200, true, alert_found);
+            }else{
+                helper.sendResponse(res, 200, true, null);
+            }
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error fetching alert. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}

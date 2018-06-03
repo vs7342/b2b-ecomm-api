@@ -186,6 +186,7 @@ app.put('/product', service_product.editProduct);
 app.get('/product', service_product.getProduct);
 app.get('/product/:product_id', service_product.getProduct);
 app.post('/alert', service_product.createAlert);
+app.get('/alert', service_product.getAlert);
 
 //Cart Service
 app.post('/cart', service_cart.addProductToCart);
