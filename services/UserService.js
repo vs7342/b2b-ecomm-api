@@ -201,7 +201,7 @@ exports.createUser = function(req, res){
     var Mobile_Number = req.body.Mobile_Number;
 
     //Check if necessary params were sent
-    if(Email && Password && First_Name && Last_Name && UserType_id && Mobile_Number){
+    if(Email && Password && First_Name && Last_Name && UserType_id && Mobile_Number != undefined){
 
         //Check if email is already used
         user.findOne({
@@ -227,7 +227,11 @@ exports.createUser = function(req, res){
                     FCM_token: ""
                 }).then(user_created=>{
                     
-                    //Create notification setting for the user
+                    //Return response if user is not admin.. since only admins need to have notification setting
+                    if(UserType_id != 3){
+                        return helper.sendResponse(res, 200, true, "User created successfully");
+                    }
+
                     user_notification_setting.create({
                         User_id: user_created.id,
                         Desktop: true,
@@ -237,7 +241,7 @@ exports.createUser = function(req, res){
                         helper.sendResponse(res, 200, true, "User created successfully");
                     }).catch(err=>{
                         console.error(err);
-                        helper.sendResponse(res, 500, false, "Error creating user. Code 2.");
+                        helper.sendResponse(res, 500, false, "User created successfully but an error was encountered while creating notification setting.");
                     });
 
                     
@@ -271,11 +275,10 @@ exports.editUser = function(req, res){
     var Password = req.body.Password;
     var First_Name = req.body.First_Name;
     var Last_Name = req.body.Last_Name;
-    var UserType_id = req.body.UserType_id;
     var Mobile_Number = req.body.Mobile_Number;
 
     //Check if necessary params were sent
-    if(Email && Password && First_Name && Last_Name && Mobile_Number){
+    if(id && Email && Password && First_Name && Last_Name && Mobile_Number != undefined){
         //Hash the password to be stored in DB
         var hashed_password = crypto.createHmac('sha256', user_secret_key)
                             .update(Password)
@@ -284,7 +287,6 @@ exports.editUser = function(req, res){
         //Update the user in DB
         user.update({
             Email: Email,
-            UserType_id: UserType_id,
             Password: hashed_password,
             First_Name: First_Name,
             Last_Name: Last_Name,

@@ -27,7 +27,7 @@ exports.createProduct = function(req, res){
     var Minimum_Quantity_Threshold = req.body.Minimum_Quantity_Threshold;
 
     //Check if necessary params were sent
-    if(Name && Short_Description && Price != undefined && Quantity != undefined && Minimum_Quantity_Threshold != undefined){
+    if(Name && Short_Description && Detail_Description && Price != undefined && Quantity != undefined && Minimum_Quantity_Threshold != undefined){
         product.create({
             Name: Name,
             Short_Description: Short_Description,
@@ -67,7 +67,7 @@ exports.editProduct = function(req, res){
     var Minimum_Quantity_Threshold = req.body.Minimum_Quantity_Threshold;
 
     //Check if necessary params were sent
-    if(id && Name && Short_Description && Price != undefined && Quantity != undefined && Minimum_Quantity_Threshold != undefined){
+    if(id && Name && Short_Description && Detail_Description && Price != undefined && Quantity != undefined && Minimum_Quantity_Threshold != undefined){
         //Fetch the product quantity before the update
         product.findOne({
             attributes:["Quantity", "Name"],

@@ -26,7 +26,7 @@ exports.createAddress = function(req, res){
     var Pincode = req.body.Pincode;
 
     //Check if necessary params were sent
-    if(User_id && Address_Line_1 && City && State && Pincode){
+    if(User_id && Address_Line_1 && Address_Line_2 && City && State && Pincode){
 
         //Check if the user is valid
         user.findOne({
@@ -81,7 +81,7 @@ exports.editAddress = function(req, res){
     var Pincode = req.body.Pincode;
 
     //Check if necessary params were sent
-    if(id && Address_Line_1 && City && State && Pincode){
+    if(id && Address_Line_1 && Address_Line_2 && City && State && Pincode){
         address.update({
             Address_Line_1: Address_Line_1,
             Address_Line_2: Address_Line_2,
