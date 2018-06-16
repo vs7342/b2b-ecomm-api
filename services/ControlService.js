@@ -562,19 +562,41 @@ exports.checkIfUrlAvailable = function(req, res){
     }
 }
 
-exports.getAllRetailers = function(req, res){
-    // Find all the retailers which are processed
-    retailer.findAll({
-        attributes:['Website_Title', 'Url_Part'],
-        where:{
-            Is_Processed: true
-        }
-    }).then(retailers_found =>{
-        helper.sendResponse(res, 200, true, retailers_found);
-    }).catch(err => {
-        console.error(err);
-        helper.sendResponse(res, 500, false, "Error fetching retailers. Code 1.");
-    });
+exports.getRetailerPublic = function(req, res){
+    //Extract url param
+    var Url_Part = req.params.url_part;
+
+    if(Url_Part != undefined) {
+
+        // Find the retailer with the given url_part (Should be processed)
+        retailer.findOne({
+            attributes:['Website_Title', 'Client_Template_id'],
+            where:{
+                Url_Part: Url_Part,
+                Is_Processed: true
+            }
+        }).then(retailer_found =>{
+            helper.sendResponse(res, 200, true, retailer_found);
+        }).catch(err => {
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error fetching retailers. Code 1.");
+        });
+
+    } else {
+
+        // Find all the retailers which are processed
+        retailer.findAll({
+            attributes:['Website_Title', 'Url_Part'],
+            where:{
+                Is_Processed: true
+            }
+        }).then(retailers_found =>{
+            helper.sendResponse(res, 200, true, retailers_found);
+        }).catch(err => {
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error fetching retailers. Code 1.");
+        });
+    }
 }
 
 //Utility function to get database name from specified retailer url

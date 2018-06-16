@@ -104,7 +104,7 @@ app.use(function(req, res, next){
 })
 
 //Public Endpoints
-app.get('/public/retailers', service_control.getAllRetailers);
+app.get(['/public/retailers','/public/retailers/:url_part'], service_control.getRetailerPublic);
 app.get(['/public/:url_part/products/', '/public/:url_part/products/:product_id'], (req, res) => {
     var url_part = req.params.url_part
     if(url_part){
