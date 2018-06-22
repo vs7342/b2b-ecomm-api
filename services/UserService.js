@@ -262,6 +262,63 @@ exports.createUser = function(req, res){
     }
 };
 
+exports.updatePassword = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+
+    //Extract body params
+    var id = req.body.id;
+    var Old_Password = req.body.Old_Password;
+    var New_Password = req.body.New_Password;
+
+    //Check if all params were sent
+    if(id && Old_Password && New_Password){
+
+        //First find the user with the given id and old password
+        var hashed_old_password = crypto.createHmac('sha256', user_secret_key)
+                                        .update(Old_Password)
+                                        .digest('hex');
+        user.findOne({
+            where:{
+                id: id,
+                Password: hashed_old_password
+            }
+        }).then(user_found => {
+            if(user_found){
+
+                //User details confirmed.. Update the user with new password
+                var hashed_new_password = crypto.createHmac('sha256', user_secret_key)
+                                        .update(New_Password)
+                                        .digest('hex');
+                user.update({
+                    Password: hashed_new_password
+                }, {
+                    where:{
+                        id: id
+                    }
+                }).then(()=>{
+                    helper.sendResponse(res, 200, true, "Password updated successfully");
+                }).catch(err=>{
+                    console.error(err);
+                    helper.sendResponse(res, 500, false, "Error updating user. Code 1.");
+                });
+
+            }else{
+                helper.sendResponse(res, 401, false, "Incorrect password!");
+            }
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error updating password. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
 exports.editUser = function(req, res){
     //Extract DB name
     var Retailer_DB = req.body.Retailer_DB;
@@ -278,20 +335,35 @@ exports.editUser = function(req, res){
     var Mobile_Number = req.body.Mobile_Number;
 
     //Check if necessary params were sent
-    if(id && Email && Password && First_Name && Last_Name && Mobile_Number != undefined){
-        //Hash the password to be stored in DB
-        var hashed_password = crypto.createHmac('sha256', user_secret_key)
-                            .update(Password)
-                            .digest('hex');
+    if(id && Email && First_Name && Last_Name && Mobile_Number != undefined){
+        var update_json;
+        if(Password){
+            //Hash the password to be stored in DB
+            var hashed_password = crypto.createHmac('sha256', user_secret_key)
+                                        .update(Password)
+                                        .digest('hex');
+            
+            //Create the user object json with password field
+            update_json = {
+                Email: Email,
+                Password: hashed_password,
+                First_Name: First_Name,
+                Last_Name: Last_Name,
+                Mobile_Number: Mobile_Number
+            }
+
+        }else{
+            //Create the user object json without the password field
+            update_json = {
+                Email: Email,
+                First_Name: First_Name,
+                Last_Name: Last_Name,
+                Mobile_Number: Mobile_Number
+            }
+        }
 
         //Update the user in DB
-        user.update({
-            Email: Email,
-            Password: hashed_password,
-            First_Name: First_Name,
-            Last_Name: Last_Name,
-            Mobile_Number: Mobile_Number
-        },{
+        user.update(update_json, {
             where:{
                 id: id
             }
@@ -340,6 +412,9 @@ exports.getUser = function(req, res){
         user.findAll({
             attributes:{
                 exclude: ['Password', 'FCM_token']
+            },
+            where:{
+                $or: [{ UserType_id: 2 }, { UserType_id: 3 }]
             }
         }).then(users=>{
             helper.sendResponse(res, 200, true, users);

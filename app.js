@@ -174,6 +174,7 @@ app.get('/user/:user_id', service_user.getUser);
 app.put('/notification', service_user.editNotificationSetting);
 app.get('/notification', service_user.getNotificationSetting);
 app.put('/fcm', service_user.editFCMToken);
+app.put('/password', service_user.updatePassword);
 
 //Address Service
 app.post('/address', service_address.createAddress);
