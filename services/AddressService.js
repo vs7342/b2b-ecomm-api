@@ -26,7 +26,7 @@ exports.createAddress = function(req, res){
     var Pincode = req.body.Pincode;
 
     //Check if necessary params were sent
-    if(User_id && Address_Line_1 && Address_Line_2 && City && State && Pincode){
+    if(User_id && Address_Line_1 && Address_Line_2 != undefined && City && State && Pincode){
 
         //Check if the user is valid
         user.findOne({

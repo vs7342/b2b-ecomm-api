@@ -217,7 +217,7 @@ exports.getCartForUser = function(req, res){
         //Delete cart instances for the user id specified
         cart.belongsTo(product, {foreignKey: "Product_id"});
         cart.findAll({
-            attributes:["id", "Quantity"],
+            attributes:["id", "User_id", "Quantity", "Product_id"],
             where:{
                 User_id: User_id
             },

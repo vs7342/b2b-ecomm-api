@@ -505,7 +505,7 @@ exports.editFCMToken = function(req, res){
     var FCM_token = req.body.FCM_token;
 
     //Check if necessary params were sent
-    if(id && FCM_token){
+    if(id && FCM_token != undefined){
         user.update({
             FCM_token: FCM_token
         },{
