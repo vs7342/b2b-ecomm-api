@@ -13,6 +13,7 @@ var service_address = require("./services/AddressService");
 var service_product = require("./services/ProductService");
 var service_cart = require("./services/CartService");
 var service_order = require("./services/OrderService");
+var service_message = require("./services/MessageService");
 
 //Express sub-app for control services
 var control_app = express();
@@ -199,6 +200,13 @@ app.delete('/cart', service_cart.emptyCart);
 app.post('/order', service_order.createOrder);
 app.get('/order', service_order.getOrder);
 app.put('/order', service_order.updateOrder);
+
+//Message Service
+app.post('/conversation', service_message.startConversation);
+app.put('/conversation/join', service_message.checkAndJoinConversation);
+app.delete('/conversation', service_message.endConversation);
+app.post('/message', service_message.postMessage);
+app.get('/message', service_message.getMessages);
 
 //Create server from the main app
 var server = http.createServer(app);

@@ -77,23 +77,38 @@ CREATE TABLE IF NOT EXISTS `Alert` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `Message` (
+CREATE TABLE IF NOT EXISTS `Conversation` (
   `id` INT NOT NULL AUTO_INCREMENT COMMENT '',
-  `From_User_id` INT NOT NULL COMMENT '',
-  `To_User_id` INT NOT NULL COMMENT '',
-  `Text` VARCHAR(250) NOT NULL COMMENT '',
+  `Customer_Service_User_id` INT NOT NULL COMMENT '',
+  `Customer_User_id` INT NULL COMMENT '',
+  `Is_Finished` BIT(1) NOT NULL COMMENT '',
   `Created_At` TIMESTAMP NOT NULL COMMENT '',
   PRIMARY KEY (`id`)  COMMENT '',
-  INDEX `fk_Message_User_idx` (`From_User_id` ASC)  COMMENT '',
-  INDEX `fk_Message_User1_idx` (`To_User_id` ASC)  COMMENT '',
-  CONSTRAINT `fk_Message_User`
-    FOREIGN KEY (`From_User_id`)
+  INDEX `fk_Conversation_User1_idx` (`Customer_Service_User_id` ASC)  COMMENT '',
+  INDEX `fk_Conversation_User2_idx` (`Customer_User_id` ASC)  COMMENT '',
+  CONSTRAINT `fk_Conversation_User1`
+    FOREIGN KEY (`Customer_Service_User_id`)
     REFERENCES `User` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Message_User1`
-    FOREIGN KEY (`To_User_id`)
+  CONSTRAINT `fk_Conversation_User2`
+    FOREIGN KEY (`Customer_User_id`)
     REFERENCES `User` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `Message` (
+  `id` INT NOT NULL AUTO_INCREMENT COMMENT '',
+  `Conversation_id` INT NOT NULL COMMENT '',
+  `Text` VARCHAR(250) NOT NULL COMMENT '',
+  `Is_From_Customer` BIT(1) NOT NULL COMMENT '',
+  `Created_At` TIMESTAMP NOT NULL COMMENT '',
+  PRIMARY KEY (`id`)  COMMENT '',
+  INDEX `fk_Message_Conversation1_idx` (`Conversation_id` ASC)  COMMENT '',
+  CONSTRAINT `fk_Message_Conversation1`
+    FOREIGN KEY (`Conversation_id`)
+    REFERENCES `Conversation` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
