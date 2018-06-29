@@ -505,7 +505,7 @@ exports.updateOrder = function(req, res){
     //Check if necessary params were sent
     if(id && StatusType_id){
 
-        if((StatusType_id == 3 || StatusType_id == 4) && Tracking_id == undefined){
+        if((StatusType_id == 3 || StatusType_id == 4) && (Tracking_id == undefined || Tracking_id.length == 0)){
             //Status ID is 'Shipped' but no tracking ID was provided
             helper.sendResponse(res, 400, false, "Tracking ID is needed when changing the Order Status to Shipped/Delivered.");
         }else{
