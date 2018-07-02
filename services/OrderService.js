@@ -321,6 +321,7 @@ exports.getOrder = function(req, res){
     var order_product = new OrderProduct(Retailer_DB).dbSeq;
     var product = new Product(Retailer_DB).dbSeq;
     var status_type = new StatusType(Retailer_DB).dbSeq;
+    var user = new User(Retailer_DB).dbSeq;
 
     //Extract query params
     var Order_id = req.query.Order_id;
@@ -331,6 +332,7 @@ exports.getOrder = function(req, res){
     order.hasMany(order_product, {foreignKey: 'Order_id'});
     order_product.belongsTo(product, {foreignKey: 'Product_id'});
     order.belongsTo(status_type, {foreignKey: 'StatusType_id'});
+    order.belongsTo(user, {foreignKey: 'User_id'});
 
     //Check if order id was sent
     if(Order_id){
@@ -354,6 +356,10 @@ exports.getOrder = function(req, res){
                 {
                     model: status_type,
                     attributes: ['Type']
+                },
+                {
+                    model: user,
+                    attributes: ['First_Name', 'Last_Name', 'Email']
                 }
             ]
         }).then(order_found => {
@@ -432,6 +438,10 @@ exports.getOrder = function(req, res){
                 {
                     model: status_type,
                     attributes: ['Type']
+                },
+                {
+                    model: user,
+                    attributes: ['First_Name', 'Last_Name', 'Email']
                 }
             ]
         }).then(orders_found => {
