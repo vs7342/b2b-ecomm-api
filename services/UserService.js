@@ -408,14 +408,26 @@ exports.getUser = function(req, res){
 
     }else{
 
+        //Get UserType query parameter
+        var UserType_id = req.query.UserType_id;
+
+        //If the user type id fetched from query is valid, then create a where clause. Else return all users.
+        var where_clause;
+        if(UserType_id == 1 || UserType_id == 2 || UserType_id == 3){
+            where_clause = {
+                UserType_id: UserType_id
+            };
+        }else{
+            // Return all users
+            where_clause = {};
+        }
+
         //Get all users
         user.findAll({
             attributes:{
                 exclude: ['Password', 'FCM_token']
             },
-            where:{
-                $or: [{ UserType_id: 2 }, { UserType_id: 3 }]
-            }
+            where: where_clause
         }).then(users=>{
             helper.sendResponse(res, 200, true, users);
         }).catch(err=>{
