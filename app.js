@@ -203,6 +203,7 @@ app.put('/order', service_order.updateOrder);
 
 //Message Service
 app.post('/conversation', service_message.startConversation);
+app.get('/conversation', service_message.getConversation);
 app.put('/conversation/join', service_message.checkAndJoinConversation);
 app.delete('/conversation', service_message.endConversation);
 app.post('/message', service_message.postMessage);

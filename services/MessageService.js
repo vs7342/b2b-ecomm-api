@@ -45,6 +45,37 @@ exports.startConversation = function(req, res) {
     
 }
 
+exports.getConversation = function(req, res) {
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var conversation = new Conversation(Retailer_DB).dbSeq;
+
+    //Extract query param
+    var id = req.query.id;
+
+    if(id){
+        //Find the conversation and return it
+        conversation.findOne({
+            where:{
+                id: id
+            }
+        }).then(conversation_found => {
+            if(conversation_found){
+                helper.sendResponse(res, 200, true, conversation_found);
+            }else{
+                helper.sendResponse(res, 200, true, null);
+            }
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error fetching conversation details. Code 1.");
+        });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
+
 exports.checkAndJoinConversation = function(req, res) {
     //Extract DB name
     var Retailer_DB = req.body.Retailer_DB;
@@ -120,7 +151,7 @@ exports.getMessages = function(req, res) {
 
                 //Fetch user details inside a conversation
                 user.findAll({
-                    attributes: ['First_Name', 'Last_Name'],
+                    attributes: ['First_Name', 'Last_Name', 'id'],
                     where:{
                         id: [conversation_found.Customer_Service_User_id, conversation_found.Customer_User_id]
                     }
