@@ -2,6 +2,7 @@
 var express = require('express');
 var http = require('http');
 var body_parser = require('body-parser');
+var socket_io = require('socket.io');
 
 //Including utility methods
 var helper = require('./helper');
@@ -215,4 +216,158 @@ var server = http.createServer(app);
 //Server will accept request on port 80
 server.listen(80, function(){
     console.log('API handling requests on port ' + server.address().port);
+});
+
+//Sockets
+var io = socket_io(server);
+
+//CORS
+io.origins("*:*");
+
+//Messages namespace
+var message_io = io.of('/messages');
+message_io.on('connection', socket => {
+    
+    //Connection success
+    console.log('SOCKET: Connected!');
+
+    //Room Handlers
+
+    //1. Join Room
+    socket.on('join-room', data => {
+
+        //Leave all rooms since client can be present in only one room
+        //Possible when someone switched tab and started a new conversation or something
+        for(var room in socket.rooms){
+            socket.leave(room);
+            //Notify the client connected in that room that this client has left
+            message_io.to(room).emit('client-left-room', {
+                user_id: socket.user_id,
+                user_name: socket.user_name
+            });
+            console.log('SOCKET: ' + socket.user_id + ' left ' + room);
+        }
+
+        //Get the url_part of the retailer from data
+        var url_part = data.url_part;
+
+        //Now get the conversation ID
+        var conversation_id = data.conversation_id;
+
+        //Get User Details
+        socket.user_id = data.user_id;
+        socket.user_name = data.user_name;
+
+        //TODO: Secure the join-room by validating the requests coming from user with the conversation / users in conversation in DB
+
+        //Room ID will look like - room_abc_1 - room_<url_part>_<conversation_id>
+        socket.join('room_' + url_part + '_' + conversation_id);
+        console.log('SOCKET: ' + socket.user_id + ' joined ' + 'room_' + url_part + '_' + conversation_id);
+
+        //Emit an event saying that user has joined the chat
+        message_io.to('room_' + url_part + '_' + conversation_id).emit('client-join-room', {
+            user_id: socket.user_id,
+            user_name: socket.user_name
+        });
+    });
+
+    //2. Send Message in room (Conversation)
+    socket.on('send-room-message', data => {
+
+        //Get the url_part of the retailer from data
+        var url_part = data.url_part;
+
+        //Now get the conversation ID
+        var conversation_id = data.conversation_id;
+
+        //Emit to connected recievers
+        socket.broadcast.to('room_' + url_part + '_' + conversation_id).emit('client-rcv-room-msg', data);
+
+        //Log
+        console.log('SOCKET: Message sent in room_' + url_part + '_' + conversation_id + ' : ' + JSON.stringify(data));
+    });
+
+    //3. End Conversation
+    socket.on('end-conversation', data => {
+        //Get the url_part of the retailer from data
+        var url_part = data.url_part;
+
+        //Now get the conversation ID
+        var conversation_id = data.conversation_id;
+
+        //Emit to connected recievers
+        socket.broadcast.to('room_' + url_part + '_' + conversation_id).emit('client-end-conversation', data);
+
+        //Log
+        console.log('SOCKET: Conversation ended for room_' + url_part + '_' + conversation_id);
+    });
+
+    //4. Leaving the room
+    socket.on('leave-room', data => {
+        //Get the url_part of the retailer from data
+        var url_part = data.url_part;
+
+        //Now get the conversation ID
+        var conversation_id = data.conversation_id;
+
+        //Leave the room
+        socket.leave('room_' + url_part + '_' + conversation_id);
+
+        //Log
+        console.log('SOCKET: Client left room_' + url_part + '_' + conversation_id);
+    });
+
+    //5. Disconnecting handler (Called just before actual disconnection) - data is lost in disconnect.. thus using disconnecting
+    socket.on('disconnecting', function(){
+        //Get all rooms the client was in..
+        var all_rooms_of_user = socket.rooms;
+        //Check since there might not be any rooms for a client
+        if(all_rooms_of_user){
+            for(var single_room in all_rooms_of_user){
+                //Let all rooms know that the user has left..
+                message_io.to(single_room).emit('client-left-room', {
+                    user_id: socket.user_id,
+                    user_name: socket.user_name
+                });
+                console.log('SOCKET: ' + socket.user_id + ' left ' + single_room);
+            }
+        }
+    });
+
+    //4. Disconnect handler
+    socket.on('disconnect', function(){
+        console.log('SOCKET: Disconnected!');
+    });
+
+});
+
+app.get('/socket/clients', function(req, res){
+    //Construct room id using the query params
+    var conversation_id = req.query.conversation_id;
+    var url_part = req.query.url_part;
+    var room_id = 'room_' + url_part + '_' + conversation_id;
+    
+    //Check if the room exists
+    if(!message_io.adapter.rooms[room_id]){
+        //room does not exists
+        //return an empty array
+        return helper.sendResponse(res, 200, true, []);
+    }
+
+    //Fetch clients connected to socket
+    try{
+        var online_users_in_room = [];
+        var clients = message_io.adapter.rooms[room_id].sockets;
+        for (var clientId in clients) {
+            var client_socket = message_io.sockets[clientId];
+            online_users_in_room.push({
+                user_id: client_socket.user_id,
+                user_name: client_socket.user_name
+            });
+        }
+        return helper.sendResponse(res, 200, true, online_users_in_room);
+    } catch(e){
+        console.log(e);
+        return res.status(200).send(helper.getResponseObject(false, 'Error retrieving connected clients.'));
+    }
 });
