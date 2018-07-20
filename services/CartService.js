@@ -76,7 +76,23 @@ exports.addProductToCart = function(req, res){
                         });
 
                     }else{
-                        helper.sendResponse(res, 404, false, "Product not found / Not enough quantity available."); 
+
+                        // Either product not found.. Or not enough quantity available.. Find out the qty and send error message accordingly
+                        product.findOne({
+                            where:{
+                                id: Product_id
+                            }
+                        }).then(product_with_qty_found=>{
+                            if(product_with_qty_found){
+                                helper.sendResponse(res, 404, false, "Cannot Add Product. Only " + product_with_qty_found.Quantity + " items are available."); 
+                            }else{
+                                helper.sendResponse(res, 404, false, "Product not found."); 
+                            }
+                        }).catch(err=>{
+                            console.error(err);
+                            helper.sendResponse(res, 500, false, "Error Adding product to cart. Code 5.");
+                        });
+
                     }
                 }).catch(err=>{
                     console.error(err);
@@ -153,10 +169,38 @@ exports.changeProductQuantity = function(req, res){
                         helper.sendResponse(res, 200, true, "Cart updated successfully");
                     }).catch(err=>{
                         console.error(err);
-                        helper.sendResponse(res, 500, false, "Error Updating Cart. Code 1.");
+                        helper.sendResponse(res, 500, false, "Error Updating Cart. Code 2.");
                     });
                 }else{
-                    helper.sendResponse(res, 404, false, "Cannot update. Cart with specified ID not found / Try updating with a reduced quantity.");
+                    // Either cart not found / product not found / product found but not enough quantity available
+                    cart.findOne({
+                        where:{
+                            id: id
+                        }
+                    }).then(cart_found_with_product => {
+                        if(cart_found_with_product){
+                            // Check if product is available.. Return qty if available
+                            product.findOne({
+                                where:{
+                                    id: cart_found_with_product.Product_id
+                                }
+                            }).then(product_with_qty_found=>{
+                                if(product_with_qty_found){
+                                    helper.sendResponse(res, 404, false, "Cannot update. Only " + product_with_qty_found.Quantity + " items are available."); 
+                                }else{
+                                    helper.sendResponse(res, 404, false, "Product not found."); 
+                                }
+                            }).catch(err=>{
+                                console.error(err);
+                                helper.sendResponse(res, 500, false, "Error Updating Cart. Code 4.");
+                            });
+                        }else{
+                            helper.sendResponse(res, 404, false, "Cannot update. Cart with specified ID not found.");
+                        }
+                    }).catch(err=>{
+                        console.error(err);
+                        helper.sendResponse(res, 500, false, "Error Updating Cart. Code 3.");
+                    });
                 }
 
             }).catch(err=>{
