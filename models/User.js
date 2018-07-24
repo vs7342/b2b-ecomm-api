@@ -14,7 +14,8 @@ module.exports = function(agency_dbname){
         First_Name: Sequelize.STRING,
         Last_Name: Sequelize.STRING,
         Mobile_Number: Sequelize.STRING,
-        FCM_token: Sequelize.STRING
+        FCM_token: Sequelize.STRING,
+        Is_Enabled: Sequelize.BOOLEAN
     }, {
         freezeTableName: true,
         logging: false,

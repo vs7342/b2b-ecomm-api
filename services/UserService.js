@@ -141,7 +141,8 @@ exports.login = function (req, res){
                 user.findOne({
                     where:{
                         Email: Email,
-                        Password: hashed_password
+                        Password: hashed_password,
+                        Is_Enabled: true
                     }
                 }).then((user_found)=>{
 
@@ -261,6 +262,91 @@ exports.createUser = function(req, res){
         helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }
 };
+
+exports.changeUserStatus = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+
+    //Extract body params
+    var id = req.body.id;
+    var Is_Enabled = req.body.Is_Enabled;
+
+    if(id && Is_Enabled != undefined){
+        user.findOne({
+            where:{
+                id: id
+            }
+        }).then(user_found => {
+
+            if(user_found){
+
+                //Check if the user type is Admin.. 
+                if(user_found.UserType_id == 3 && Is_Enabled == false){
+                    // This means that an admin is getting disabled
+                    // At least one admin should be present in database.. Check for that condition
+                    // Check for admin count in db.. if 2 or more, proceed with deletion.. else throw an error
+                    user.findAndCount({
+                        where:{
+                            UserType_id: 3,
+                            Is_Enabled: true
+                        }
+                    }).then(admins_in_db => {
+                        if(admins_in_db.count >= 2){
+                            // Proceed with updation
+                            // Safe to update status
+                            user.update({
+                                Is_Enabled: Is_Enabled
+                            },{
+                                where:{
+                                    id: id
+                                }
+                            }).then(()=>{
+                                helper.sendResponse(res, 200, true, "User Status Updated.");
+                            }).catch(err=>{
+                                console.error(err);
+                                helper.sendResponse(res, 500, false, "Error changing status. Code 4.");
+                            });
+                        }else{
+                            // Throw an error
+                            helper.sendResponse(res, 400, false, "Cannot disable. At least one admin is required in the system.");
+                        }
+                    }).catch(err=>{
+                        console.error(err);
+                        helper.sendResponse(res, 500, false, "Error changing status. Code 3.");
+                    }); 
+
+                }else{
+
+                    // Safe to update status
+                    user.update({
+                        Is_Enabled: Is_Enabled
+                    },{
+                        where:{
+                            id: id
+                        }
+                    }).then(()=>{
+                        helper.sendResponse(res, 200, true, "User Status Updated.");
+                    }).catch(err=>{
+                        console.error(err);
+                        helper.sendResponse(res, 500, false, "Error changing status. Code 2.");
+                    });
+                }
+
+            }else{
+                helper.sendResponse(res, 400, false, "Cannot update status. User not found.");
+            }
+
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error changing status. Code 1.");
+        });
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+}
 
 exports.updatePassword = function(req, res){
     //Extract DB name
