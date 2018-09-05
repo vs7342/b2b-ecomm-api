@@ -219,4 +219,5 @@ INSERT INTO `StatusType` (`id`, `Type`) VALUES (1, 'Order Placed');
 INSERT INTO `StatusType` (`id`, `Type`) VALUES (2, 'Order Processed');
 INSERT INTO `StatusType` (`id`, `Type`) VALUES (3, 'Shipped (Fedex)');
 INSERT INTO `StatusType` (`id`, `Type`) VALUES (4, 'Delivered');
+INSERT INTO `StatusType` (`id`, `Type`) VALUES (5, 'Issues');
 COMMIT;

@@ -506,6 +506,8 @@ exports.updateOrder = function(req, res){
 
     //Define models based on DB
     var order = new Order(Retailer_DB).dbSeq;
+    var user = new User(Retailer_DB).dbSeq;
+    var user_notification_setting = new UserNotificationSetting(Retailer_DB).dbSeq;
 
     //Extract body params
     var id = req.body.id;
@@ -533,6 +535,66 @@ exports.updateOrder = function(req, res){
                 }
             }).then(()=>{
                 helper.sendResponse(res, 200, true, "Order updated successfully.");
+                
+                // Notify admins if the status of order is updated to 'Issues'
+                if(StatusType_id == 5){
+
+                    // Find admins and their notification setting
+                    user.hasOne(user_notification_setting, {foreignKey: 'User_id'});
+                    user.findAll({
+                        attributes:['FCM_token', 'Mobile_Number', 'Email'],
+                        where:{
+                            UserType_id: 3
+                        },
+                        include:[{
+                            model: user_notification_setting,
+                            attributes: ['Desktop', 'SMS', 'Email']
+                        }]
+                    }).then(admins => {
+                        
+                        admins.forEach(admin => {
+
+                            //Desktop Notification
+                            if(admin.UserNotificationSetting.Desktop && admin.FCM_token.length > 0){
+                                helper.sendNotification(
+                                    admin.FCM_token,
+                                    'Order marked with issues',
+                                    'Order ID - ' + id,
+                                    ''
+                                );
+                            }
+
+                            //SMS Notification
+                            if(admin.UserNotificationSetting.SMS && admin.Mobile_Number.length > 0){
+                                helper.sendSMS(
+                                    admin.Mobile_Number,
+                                    'Order marked with issues : ID - ' + id
+                                );
+                            }
+
+                            //Email Notification
+                            if(admin.UserNotificationSetting.Email && admin.Email.length > 0){
+                                helper.sendEmail(
+                                    [admin.Email],
+                                    'Order marked with issues',
+                                    `
+                                        <p>
+                                            Hello, <br/><br/>
+                                            Order with ID ` + id + ` was marked with issues.<br/><br/>
+                                            Regards, <br/>
+                                            B2BComm Team.
+                                        </p>
+                                    `
+                                );
+                            }  
+                        });
+
+                    }).catch(err=>{
+                        console.error('Error finding admins to send notification.');
+                        console.error(err);
+                    });
+
+                }
             }).catch(err=>{
                 console.error(err);
                 helper.sendResponse(res, 500, false, "Error Updating Order. Code 1.");
