@@ -349,7 +349,7 @@ exports.getOrder = function(req, res){
                     include:[{
                         model: product,
                         attributes: {
-                            exclude: ['Detail Description', 'Quantity', 'Minimum_Quantity_Threshold']
+                            exclude: ['Detail_Description', 'Quantity', 'Minimum_Quantity_Threshold']
                         }
                     }]
                 },
@@ -431,7 +431,7 @@ exports.getOrder = function(req, res){
                     include:[{
                         model: product,
                         attributes: {
-                            exclude: ['Detail Description', 'Quantity', 'Minimum_Quantity_Threshold']
+                            exclude: ['Detail_Description', 'Quantity', 'Minimum_Quantity_Threshold']
                         }
                     }]
                 },

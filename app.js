@@ -173,6 +173,7 @@ app.post('/user', service_user.createUser);
 app.put('/user', service_user.editUser);
 app.put('/status/user', service_user.changeUserStatus);
 app.get('/user', service_user.getUser);
+app.get('/customer/overview/:user_id', service_user.getCustomerOverview);
 app.get('/user/:user_id', service_user.getUser);
 app.put('/notification', service_user.editNotificationSetting);
 app.get('/notification', service_user.getNotificationSetting);

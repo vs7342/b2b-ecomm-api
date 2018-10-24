@@ -12,6 +12,10 @@ var helper = require('../helper');
 //Required Models
 var User = require('../models/User');
 var UserNotificationSetting = require('../models/UserNotificationSetting');
+var Order = require('../models/Order');
+var OrderProduct = require('../models/OrderProduct');
+var Product = require('../models/Product');
+var Cart = require('../models/Cart');
 
 //Config stuff
 var config_file_name = '../configs/' + helper.ENVIRONMENT + '.json';
@@ -619,6 +623,124 @@ exports.editFCMToken = function(req, res){
     }else{
         helper.sendResponse(res, 400, false, "Insufficient Parameters");
     }
+}
+
+exports.getCustomerOverview = function(req, res){
+    //Extract DB name
+    var Retailer_DB = req.body.Retailer_DB;
+
+    //Define models based on DB
+    var user = new User(Retailer_DB).dbSeq;
+    var order = new Order(Retailer_DB).dbSeq;
+    var order_product = new OrderProduct(Retailer_DB).dbSeq;
+    var product = new Product(Retailer_DB).dbSeq;
+    var cart = new Cart(Retailer_DB).dbSeq;
+
+    //Extract route params
+    var User_id = req.params.user_id;
+
+    //Defining associations
+    order.hasMany(order_product, {foreignKey: 'Order_id'});
+    order_product.belongsTo(product, {foreignKey: 'Product_id'});
+    user.hasMany(cart, {foreignKey: 'User_id'});
+    cart.belongsTo(product, {foreignKey: 'Product_id'});
+
+    //Check if the user id is present
+    if(User_id){
+
+        //Check if the user is customer
+        user.findOne({
+            attributes:["id", "Email", "First_Name", "Last_Name"],
+            where:{
+                id: User_id,
+                UserType_id: 1,
+            }
+        }).then(user_found =>{
+
+            //Proceed only if user found (This means the user is customer)
+            if(user_found){
+
+                //Declare the object which will be sent as response
+                var response_object = {
+                    user: user_found,
+                    orders: null,
+                    carts: null
+                };
+
+                var six_month_previous_date = new Date(new Date().setMonth(new Date().getMonth() - 6));
+
+                //Fetch order details from last 6 months only
+                order.findAll({
+                    where:{
+                        User_id: User_id,
+                        Created_At: {
+                            $gte: six_month_previous_date
+                        }
+                    },
+                    order:[['id', 'DESC']],
+                    include: [{
+                        model: order_product,
+                        attributes: ['Quantity'],
+                        include:[{
+                            model: product,
+                            attributes: {
+                                exclude: ['Detail_Description', 'Quantity', 'Minimum_Quantity_Threshold']
+                            },
+                        }]
+                    }]
+                }).then(orders => {
+
+                    //Assign the fetched orders value to appropriate key in response object
+                    if(orders){
+                        response_object.orders = orders;
+                    } 
+                    
+                    //Now fetch the cart details if any
+                    cart.findAll({
+                        where:{
+                            User_id: User_id
+                        },
+                        attributes: ['Quantity'],
+                        include:[{
+                            model: product,
+                            attributes: {
+                                exclude: ['Detail_Description', 'Quantity', 'Minimum_Quantity_Threshold']
+                            }
+                        }]
+                    }).then(carts => {
+                        
+                        //Assign the fetched cart value to appropriate key in response object
+                        if(carts){
+                            response_object.carts = carts;
+                        }
+
+                        //Finally return the response object
+                        helper.sendResponse(res, 200, true, response_object);
+
+                    }).catch(err=>{
+                        console.error(err);
+                        helper.sendResponse(res, 500, false, "Error Fetching Customer Details. Code 3.");
+                    });
+
+
+                }).catch(err=>{
+                    console.error(err);
+                    helper.sendResponse(res, 500, false, "Error Fetching Customer Details. Code 2.");
+                });
+
+            }else{
+                helper.sendResponse(res, 400, false, "User not found / User is not a customer.");
+            }
+
+        }).catch(err=>{
+            console.error(err);
+            helper.sendResponse(res, 500, false, "Error Fetching Customer Details. Code 1.");
+        });
+
+    }else{
+        helper.sendResponse(res, 400, false, "Insufficient Parameters");
+    }
+
 }
 
 //Utility Function to construct jwt with the given payload.
